@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Binomische Formeln zum Anfassen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAFCFF; --grid:#D3E0EF; --grid-strong:#B9CCE3;
+  --ink:#1D2A44; --ink-soft:#56637C; --line:#C9D5E4;
+  --panel:#FFFFFF; --accent:#2F5DA8; --accent-ink:#FFFFFF;
+  --blue:#8DB4E2; --red:#E97B63; --green:#4FAE80; --yellow:#F2C640;
+  --good:#1F7A4C; --good-bg:#E4F4EA; --bad:#B23A28; --bad-bg:#FBE7E3;
+  --sq:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#16202E; --grid:#24324A; --grid-strong:#30425F;
+    --ink:#E8EEF7; --ink-soft:#A7B3C7; --line:#33445E;
+    --panel:#1C2838; --accent:#7EA6E8; --accent-ink:#0E1828;
+    --good:#7FD6A6; --good-bg:#183326; --bad:#F2A091; --bad-bg:#3A1F1A;
+    --sq:#1C2838;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16202E; --grid:#24324A; --grid-strong:#30425F;
+  --ink:#E8EEF7; --ink-soft:#A7B3C7; --line:#33445E;
+  --panel:#1C2838; --accent:#7EA6E8; --accent-ink:#0E1828;
+  --good:#7FD6A6; --good-bg:#183326; --bad:#F2A091; --bad-bg:#3A1F1A;
+  --sq:#1C2838;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;height:100%}
+body{
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  font-size:17px; line-height:1.45;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:16px 16px 28px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:14px}
+h1{font-size:1.65rem;line-height:1.15;margin:0;font-weight:700;letter-spacing:-.01em}
+h1 small{display:block;font-size:.95rem;font-weight:400;color:var(--ink-soft);margin-top:4px;letter-spacing:0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:5px}
+.tab{appearance:none;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;padding:10px 16px;border-radius:10px;min-height:44px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.board{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:10px}
+.board svg{display:block;width:100%;height:auto;max-height:68vh;touch-action:none;user-select:none;-webkit-user-select:none}
+.tools{display:flex;flex-wrap:wrap;gap:8px;padding:8px 2px 2px;align-items:center}
+.tools .info{color:var(--ink-soft);font-size:.92rem;margin-left:auto}
+button.btn{appearance:none;font:inherit;font-weight:700;border-radius:10px;min-height:44px;padding:9px 16px;cursor:pointer;border:1.5px solid var(--line);background:var(--panel);color:var(--ink)}
+button.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+.panel{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:18px 18px 16px}
+.progress{display:flex;gap:4px;margin-bottom:12px}
+.progress span{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.progress span.done{background:var(--accent)}
+.progress span.now{background:var(--yellow)}
+.goal{margin:0 0 10px;padding:8px 12px;border-radius:10px;background:var(--paper);border:1.5px solid var(--accent);font-weight:700}
+.demo .task{font-size:1.3rem}
+.demo .feedback{font-size:1.2rem}
+.stepno{color:var(--ink-soft);font-size:.92rem;margin:0 0 4px}
+.task{font-size:1.12rem;margin:0 0 14px}
+.task b{font-weight:700}
+.answer{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.answer input[type=number]{font:inherit;font-size:1.2rem;width:7.5em;min-height:46px;padding:6px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink)}
+.choices{display:grid;gap:8px;margin-bottom:10px}
+.choices button{text-align:left;font-weight:400}
+.choices button.right{background:var(--good-bg);border-color:var(--good);color:var(--ink)}
+.choices button.wrong{background:var(--bad-bg);border-color:var(--bad);color:var(--ink)}
+.match{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;margin-bottom:10px}
+.match label{font-weight:700}
+.match select{font:inherit;min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);padding:6px 10px}
+.sliders{display:grid;gap:10px;margin-bottom:10px}
+.sliders label{display:grid;grid-template-columns:7.5em 1fr 2.5em;align-items:center;gap:10px}
+.sliders input[type=range]{width:100%;accent-color:var(--accent);min-height:36px}
+.calc{background:var(--paper);border:1.5px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:1.05rem;margin-bottom:10px}
+.wait{color:var(--ink-soft);font-style:italic;margin-bottom:10px}
+.feedback{border-radius:10px;padding:10px 12px;margin:4px 0 12px;display:none}
+.feedback.good{display:block;background:var(--good-bg);color:var(--ink);border-left:5px solid var(--good)}
+.feedback.bad{display:block;background:var(--bad-bg);color:var(--ink);border-left:5px solid var(--bad)}
+.hint{display:none;color:var(--ink-soft);margin:0 0 12px;padding-left:12px;border-left:3px solid var(--yellow)}
+.hint.show{display:block}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.nav .spacer{flex:1}
+.notes{margin-top:16px;padding-top:12px;border-top:1.5px dashed var(--line)}
+.notes h2{font-size:1rem;margin:0 0 6px}
+.notes ol{margin:0;padding-left:1.4em}
+.notes li{margin:2px 0}
+.notes .empty{color:var(--ink-soft);font-size:.95rem;margin:0}
+.done-card{background:var(--good-bg);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.piece{cursor:grab}
+.piece.dragging{cursor:grabbing}
+@media (prefers-reduced-motion: no-preference){
+  .piece.anim{transition:transform .45s ease}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Binomische Formeln zum Anfassen<small>Verschiebe die Teile mit dem Finger und folge den Schritten rechts.</small></h1>
+    <div class="tabs" role="tablist" aria-label="Formel wählen">
+      <button class="tab" role="tab" id="tab-plus" aria-selected="true">1. Formel (x + 4)²</button>
+      <button class="tab" role="tab" id="tab-minus" aria-selected="false">2. Formel (x − 4)² – Vorführung</button>
+      <button class="tab" role="tab" id="tab-third" aria-selected="false">3. Formel (x + 4)(x − 4)</button>
+    </div>
+  </header>
+  <main>
+    <section class="board" aria-label="Arbeitsfläche">
+      <svg id="svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbeitsfläche mit verschiebbaren Flächenstücken"></svg>
+      <div class="tools">
+        <button class="btn" id="rotate" type="button">Teil drehen</button>
+        <button class="btn" id="reset" type="button">Teile zurücksetzen</button>
+        <span class="info" id="info">Ein Kästchen = 1</span>
+      </div>
+    </section>
+    <section class="panel" aria-live="polite">
+      <div class="progress" id="progress"></div>
+      <div id="stepbox"></div>
+      <div class="notes">
+        <h2>Für dein Heft</h2>
+        <div id="notes"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('svg');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- state ---------- */
+function freshState(mode){
+  return {mode, x:10, b:4, step:0, solved:{}, notes:[], cut:false, general:false, pieces:[], selected:null};
+}
+const states={plus:freshState('plus'), minus:freshState('minus'), third:freshState('third')};
+let S=states.plus;
+const XL=st=>st.general?'a':'x';
+const BL=st=>st.general?'b':String(st.b);
+
+/* ---------- layout ---------- */
+function dims(st){
+  const {x,b}=st;
+  if(st.mode==='minus') return {W:x+b+5, H:x+b+5};
+  if(st.mode==='third') return {W:x+b+5, H:x+b+3};
+  return {W:2*(x+b)+4, H:x+b+3};
+}
+function layout(st){
+  const {x,b}=st, X=XL(st), B=BL(st);
+  if(st.mode==='minus'){
+    st.pieces=[
+      {id:'F',x:x+3,y:1,w:b,h:x,color:'--red',tl:B,ll:X},
+      {id:'G',x:1,y:x+3,w:x,h:b,color:'--green',tl:X,ll:B}
+    ];
+    st.cut=false;
+  }else if(st.mode==='third'){
+    st.pieces=[
+      {id:'T',x:1,y:1,w:x,h:x-b,color:'--blue',tl:X,ll:X+' − '+B},
+      {id:'U',x:1,y:1+x-b,w:x-b,h:b,color:'--red',tl:X+' − '+B,ll:B},
+      {id:'K',x:1+x-b,y:1+x-b,w:b,h:b,color:'--yellow',tl:B,ll:B,ox:1+x-b,oy:1+x-b}
+    ];
+  }else{
+    st.pieces=[
+      {id:'A',x:1,y:1,w:x,h:x,color:'--blue',tl:X,ll:X,ox:1,oy:1},
+      {id:'B',x:1+x,y:1,w:b,h:x,color:'--red',tl:B,ll:X,ox:1+x,oy:1},
+      {id:'C',x:1,y:1+x,w:x,h:b,color:'--red',tl:X,ll:B,ox:1,oy:1+x},
+      {id:'D',x:1+x,y:1+x,w:b,h:b,color:'--yellow',tl:B,ll:B,ox:1+x,oy:1+x}
+    ];
+  }
+  st.selected=null;
+}
+function cutLayout(st){
+  const {x,b}=st, B=BL(st);
+  st.pieces=[
+    {id:'F',x:1+x-b,y:1,w:b,h:x,color:'--red',tl:B,ll:XL(st)},
+    {id:'G',x:1,y:1+x-b,w:x-b,h:b,color:'--green',tl:XL(st)+' − '+B,ll:B},
+    {id:'H',x:x+3,y:x+3,w:b,h:b,color:'--yellow',tl:B,ll:B}
+  ];
+  st.cut=true; st.selected=null;
+}
+const P=id=>S.pieces.find(p=>p.id===id);
+const near=(p,tx,ty,tol=1.6)=>!!p&&Math.abs(p.x-tx)<tol&&Math.abs(p.y-ty)<tol;
+const kOut=st=>{const K=P('K'),x=st.x; return !!K&&(K.x>=1+x||K.y>=1+x||K.x+K.w<=1||K.y+K.h<=1);};
+const uMoved=st=>{const U=P('U'); return !!U&&U.w===st.b&&U.h===st.x-st.b&&U.x===1+st.x&&U.y===1;};
+const rectShown=st=>uMoved(st)&&(st.general?st.solved[11]:st.solved[5]);
+const placed=st=>near(P('F'),1+st.x-st.b,1,0.01)&&near(P('G'),1,1+st.x-st.b,0.01);
+
+/* ---------- svg rendering ---------- */
+function el(name,attrs,parent){
+  const e=document.createElementNS(NS,name);
+  for(const k in attrs) e.setAttribute(k,attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+let layerPieces, layerOver, layerUnder;
+function buildBoard(){
+  const {W,H}=dims(S);
+  svg.innerHTML='';
+  svg.setAttribute('viewBox',`-2 -2 ${W+2.5} ${H+2.5}`);
+  const defs=el('defs',{},svg);
+  const pat=el('pattern',{id:'cells',width:1,height:1,patternUnits:'userSpaceOnUse'},defs);
+  el('path',{d:'M1 0H0V1',fill:'none',stroke:'rgba(29,42,68,.28)','stroke-width':0.04},pat);
+  const bg=el('pattern',{id:'paper',width:1,height:1,patternUnits:'userSpaceOnUse'},defs);
+  el('path',{d:'M1 0H0V1',fill:'none',stroke:css('--grid-strong'),'stroke-width':0.035},bg);
+  el('rect',{x:-2,y:-2,width:W+2.5,height:H+2.5,fill:css('--paper')},svg);
+  if(!S.general) el('rect',{x:0,y:0,width:W,height:H,fill:'url(#paper)'},svg);
+  layerUnder=el('g',{},svg);
+  layerPieces=el('g',{},svg);
+  layerOver=el('g',{'pointer-events':'none'},svg);
+  drawUnder();
+  S.pieces.forEach(p=>{p.node=null; drawPiece(p);});
+  drawOver();
+}
+function label(parent,cx,cy,txt,size,italic,weight,anchor){
+  const t=el('text',{x:cx,y:cy,'text-anchor':anchor||'middle','font-size':size,fill:css('--ink'),'font-family':'Atkinson Hyperlegible, system-ui, sans-serif'},parent);
+  if(italic) t.setAttribute('font-style','italic');
+  if(weight) t.setAttribute('font-weight',weight);
+  t.textContent=txt;
+  return t;
+}
+const isVar=t=>t==='x'||t==='a';
+function dimH(x0,x1,y,txt,size){
+  el('path',{d:`M${x0} ${y}H${x1}M${x0} ${y-0.25}V${y+0.25}M${x1} ${y-0.25}V${y+0.25}`,stroke:css('--ink-soft'),'stroke-width':0.06,fill:'none'},layerUnder);
+  label(layerUnder,(x0+x1)/2,y-0.22,txt,size,isVar(txt),700);
+}
+function dimV(y0,y1,x,txt,size){
+  el('path',{d:`M${x} ${y0}V${y1}M${x-0.25} ${y0}H${x+0.25}M${x-0.25} ${y1}H${x+0.25}`,stroke:css('--ink-soft'),'stroke-width':0.06,fill:'none'},layerUnder);
+  label(layerUnder,x-0.3,(y0+y1)/2+size*0.35,txt,size,isVar(txt),700,'end');
+}
+function drawUnder(){
+  layerUnder.innerHTML='';
+  const {x,b}=S, X=XL(S), B=BL(S);
+  if(S.mode==='minus'){
+    el('rect',{x:1,y:1,width:x,height:x,fill:css('--sq')},layerUnder);
+    if(!S.general) el('rect',{x:1,y:1,width:x,height:x,fill:'url(#cells)'},layerUnder);
+    el('rect',{x:1,y:1,width:x,height:x,fill:'none',stroke:css('--ink'),'stroke-width':0.12},layerUnder);
+    dimH(1,1+x,-0.9,X,0.8);
+    dimH(1+x-b,1+x,0.35,B,0.65);
+    dimV(1,1+x,-0.9,X,0.8);
+    dimV(1+x-b,1+x,0.35,B,0.65);
+  }else if(S.mode==='third'){
+    el('rect',{x:1,y:1,width:x,height:x,fill:'none',stroke:css('--ink-soft'),'stroke-width':0.07,'stroke-dasharray':'0.3 0.25'},layerUnder);
+    if(rectShown(S)){
+      dimH(1,1+x+b,-0.9,X+' + '+B,0.8);
+      el('path',{d:`M${x+b+1.9} 1V${1+x-b}M${x+b+1.65} 1H${x+b+2.15}M${x+b+1.65} ${1+x-b}H${x+b+2.15}`,stroke:css('--ink-soft'),'stroke-width':0.06,fill:'none'},layerUnder);
+      label(layerUnder,x+b+2.3,1+(x-b)/2+0.28,X+' − '+B,0.8,false,700,'start');
+    }else{
+      dimH(1,1+x,-0.9,X,0.8);
+      dimH(1+x-b,1+x,0.35,B,0.65);
+      dimV(1,1+x,-0.9,X,0.8);
+      dimV(1+x-b,1+x,0.35,B,0.65);
+    }
+  }else{
+    const s=x+b;
+    el('rect',{x:1,y:1,width:s,height:s,fill:'none',stroke:css('--ink-soft'),'stroke-width':0.07,'stroke-dasharray':'0.3 0.25'},layerUnder);
+    dimH(1,1+s,-0.9,X+' + '+B,0.75);
+    dimH(1,1+x,0.35,X,0.65);
+    dimH(1+x,1+s,0.35,B,0.65);
+    dimV(1,1+x,0.35,X,0.65);
+    dimV(1+x,1+s,0.35,B,0.65);
+  }
+}
+function areaText(p){
+  const X=XL(S), B=BL(S), sqr=v=>v+'²', rect=S.general?'ab':B+X;
+  if(S.mode==='third'){
+    if(p.id!=='K') return '';
+    return (S.general?S.solved[10]:S.solved[3])?sqr(B):'';
+  }
+  if(S.mode==='plus'){
+    const known=S.general?S.solved[9]:S.solved[3];
+    if(!known) return '';
+    return {A:sqr(X),B:rect,C:rect,D:sqr(B)}[p.id]||'';
+  }
+  if(p.id==='H') return sqr(B);
+  if(p.id==='G'&&S.cut) return '';
+  return (p.id==='F'||p.id==='G')?rect:'';
+}
+function drawPiece(p){
+  if(!p.node){
+    p.node=el('g',{class:'piece','data-id':p.id},layerPieces);
+    p.node.addEventListener('pointerdown',startDrag);
+  }
+  const g=p.node;
+  g.innerHTML='';
+  g.setAttribute('transform',`translate(${p.x} ${p.y})`);
+  el('rect',{width:p.w,height:p.h,fill:css(p.color),'fill-opacity':0.55},g);
+  if(!S.general) el('rect',{width:p.w,height:p.h,fill:'url(#cells)'},g);
+  const sel=S.selected===p.id;
+  el('rect',{width:p.w,height:p.h,fill:'none',stroke:sel?css('--accent'):css('--ink'),'stroke-width':sel?0.2:0.1},g);
+  const fs=Math.min(1.4,Math.min(p.w,p.h)*0.45);
+  const area=areaText(p);
+  const small0=Math.min(0.8,Math.max(0.45,Math.min(p.w,p.h)*0.22));
+  const showLL=p.ll.length*small0*0.5<=p.w*0.4;
+  const cx=p.w/2;
+  if(area&&p.w>=6&&p.h<5.5){
+    label(g,p.w/2-fs*0.75,p.h/2+fs*0.35,p.id,fs,false,700);
+    const t=label(g,p.w/2+fs*0.35,p.h/2+fs*0.3,'= '+area,fs*0.72,false,700,'start');
+    t.setAttribute('fill',css('--accent'));
+  }else if(area){
+    const f2=Math.min(fs,p.h*0.28);
+    label(g,cx,p.h/2-f2*0.05,p.id,f2,false,700);
+    const t=label(g,cx,p.h/2+f2*0.85,area,f2*0.75,false,700);
+    t.setAttribute('fill',css('--accent'));
+  }else label(g,cx,p.h/2+fs*0.35,p.id,fs,false,700);
+  const small=Math.min(0.8,Math.max(0.45,Math.min(p.w,p.h)*0.22));
+  if(p.w>=1.6) label(g,p.w/2,small+0.15,p.tl,small,isVar(p.tl));
+  if(p.h>=1.6&&showLL) label(g,0.2,p.h/2+small*0.35,p.ll,small,isVar(p.ll),undefined,'start');
+}
+function drawOver(){
+  layerOver.innerHTML='';
+  const {x,b}=S, X=XL(S), B=BL(S);
+  if(S.mode==='third'){
+    if(rectShown(S)){
+      el('rect',{x:1,y:1,width:x+b,height:x-b,fill:'none',stroke:css('--accent'),'stroke-width':0.18},layerOver);
+      const t=label(layerOver,1+(x+b)/2,1+(x-b)+1.1,`Rechteck: (${X} + ${B}) · (${X} − ${B})`,0.8,false,700);
+      t.setAttribute('fill',css('--accent'));
+    }
+    return;
+  }
+  if(S.mode!=='minus') return;
+  const f=S.f||{};
+  if(f.target){
+    el('rect',{x:1,y:1,width:x-b,height:x-b,fill:css('--accent'),'fill-opacity':0.08,stroke:css('--accent'),'stroke-width':0.16,'stroke-dasharray':'0.5 0.3'},layerOver);
+    const fsz=Math.min(0.85,(x-b)*0.12);
+    label(layerOver,1+(x-b)/2,1+(x-b)/2,`(${X} − ${B})²`,fsz,false,700);
+    if(!S.general) label(layerOver,1+(x-b)/2,1+(x-b)/2+fsz*1.2,f.count?'= '+(x-b)*(x-b)+' Kästchen':'= ?',fsz*0.8,false,400);
+  }
+  if(f.whole&&!f.overlap) label(layerOver,1+x/2,1+x+0.9,`ganzes Quadrat: ${X}²`,0.65,false,700);
+  if(f.overlap&&!S.cut){
+    el('rect',{x:1+x-b,y:1+x-b,width:b,height:b,fill:'none',stroke:css('--ink'),'stroke-width':0.22,'stroke-dasharray':'0.35 0.25'},layerOver);
+    label(layerOver,1+x-b+b/2,1+x+0.85,'doppelt abgezogen',0.6,false,700);
+  }
+  if(f.plus&&P('H')){const H=P('H'); label(layerOver,H.x+H.w/2,H.y+H.h+0.9,`einmal zurück: + ${B}²`,0.6,false,700);}
+}
+
+/* ---------- dragging ---------- */
+let drag=null;
+function pt(e){
+  const m=svg.getScreenCTM().inverse();
+  const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY;
+  return p.matrixTransform(m);
+}
+function startDrag(e){
+  const id=this.getAttribute('data-id');
+  const p=P(id); if(!p) return;
+  e.preventDefault();
+  layerPieces.appendChild(this);
+  this.setPointerCapture(e.pointerId);
+  const q=pt(e);
+  drag={p,dx:q.x-p.x,dy:q.y-p.y,sx:p.x,sy:p.y,moved:false,node:this};
+  S.pieces.push(S.pieces.splice(S.pieces.indexOf(p),1)[0]);
+  this.classList.add('dragging');
+  this.addEventListener('pointermove',moveDrag);
+  this.addEventListener('pointerup',endDrag);
+  this.addEventListener('pointercancel',endDrag);
+}
+function moveDrag(e){
+  if(!drag) return;
+  const q=pt(e); const {W,H}=dims(S);
+  let nx=q.x-drag.dx, ny=q.y-drag.dy;
+  nx=Math.max(0,Math.min(W-drag.p.w,nx));
+  ny=Math.max(0,Math.min(H-drag.p.h,ny));
+  if(Math.abs(nx-drag.sx)>0.15||Math.abs(ny-drag.sy)>0.15) drag.moved=true;
+  drag.p.x=nx; drag.p.y=ny;
+  drag.node.setAttribute('transform',`translate(${nx} ${ny})`);
+}
+function endDrag(){
+  if(!drag) return;
+  const {p,node}=drag;
+  node.classList.remove('dragging');
+  node.removeEventListener('pointermove',moveDrag);
+  node.removeEventListener('pointerup',endDrag);
+  node.removeEventListener('pointercancel',endDrag);
+  if(!drag.moved){
+    S.selected=(S.selected===p.id)?null:p.id;
+    p.x=drag.sx; p.y=drag.sy;
+  }else{
+    p.x=Math.round(p.x); p.y=Math.round(p.y);
+    snapTargets(p);
+  }
+  drag=null;
+  S.pieces.forEach(drawPiece);
+  drawOver();
+  updateTools();
+  onBoardChange();
+}
+function snapTargets(p){
+  const {x,b}=S;
+  if(S.mode==='minus'){
+    if(p.id==='F'&&near(p,1+x-b,1)){p.x=1+x-b;p.y=1;}
+    if(p.id==='G'&&near(p,1,1+x-b)){p.x=1;p.y=1+x-b;}
+  }else if(S.mode==='third'){
+    if(p.id==='U'&&p.w===b&&p.h===x-b&&near(p,1+x,1)){p.x=1+x;p.y=1;}
+  }else{
+    const C=P('C'), B=P('B');
+    if(p.id==='B'&&p.w===C.w&&p.h===C.h&&near(p,C.x,C.y)){p.x=C.x;p.y=C.y;}
+    if(p.id==='C'&&p.w===B.w&&p.h===B.h&&near(p,B.x,B.y)){p.x=B.x;p.y=B.y;}
+  }
+}
+document.getElementById('rotate').addEventListener('click',()=>{
+  const p=P(S.selected); if(!p) return;
+  [p.w,p.h]=[p.h,p.w]; [p.tl,p.ll]=[p.ll,p.tl];
+  const {W,H}=dims(S);
+  p.x=Math.max(0,Math.min(W-p.w,p.x)); p.y=Math.max(0,Math.min(H-p.h,p.y));
+  drawPiece(p); onBoardChange();
+});
+document.getElementById('reset').addEventListener('click',()=>{
+  if(S.mode==='minus'){applyScene(S.step,!!S.revealed);return;}
+  layout(S);
+  buildBoard(); updateTools(); onBoardChange();
+});
+function updateTools(){
+  const rot=document.getElementById('rotate');
+  rot.style.display=S.mode!=='minus'?'':'none';
+  rot.disabled=!S.selected;
+  const info=document.getElementById('info');
+  if(S.general) info.textContent='Allgemein: a und b sind beliebige Längen';
+  else info.textContent=S.mode!=='minus'
+    ? (S.selected?`Teil ${S.selected} ausgewählt`:'Tippe ein Teil an, um es auszuwählen')
+    : 'Ein Kästchen = 1';
+}
+function goGeneral(st){
+  st.general=true; st.x=10; st.b=3; st.cut=false;
+  layout(st); buildBoard(); updateTools();
+}
+
+/* ---------- steps ---------- */
+const sq=n=>n*n;
+const STEPS={
+plus:[
+ {kind:'choice', text:st=>`Wir suchen den Flächeninhalt von <b>(x + ${st.b})²</b> – und zwar ohne Klammer. Welches Quadrat auf der Arbeitsfläche hat diesen Flächeninhalt? Achte auf die Beschriftung.`,
+  options:st=>[`das ganze große Quadrat mit Seitenlänge x + ${st.b}`,'das blaue Quadrat A mit Seitenlänge x','das Rechteck B',`das kleine Quadrat D mit Seitenlänge ${st.b}`], correct:0,
+  hint:st=>`(x + ${st.b})² ist ein Quadrat mit der Seitenlänge x + ${st.b}.`,
+  good:st=>`Genau: Der Gesamtflächeninhalt des großen Quadrats ist (x + ${st.b})². Im Raster sind das ${st.x+st.b} · ${st.x+st.b} = ${sq(st.x+st.b)} Kästchen.`,
+  note:st=>`Gesucht: (x + ${st.b})², der Gesamtflächeninhalt des großen Quadrats.`},
+ {kind:'choice', text:()=>`Plan: Wir teilen das große Quadrat in Teile auf, deren Flächeninhalte wir kennen. Dann addieren wir diese Teile. Aus welchen Teilen besteht das große Quadrat?`,
+  options:()=>['aus einem großen Quadrat, zwei Rechtecken und einem kleinen Quadrat','aus zwei gleich großen Quadraten','aus vier gleich großen Quadraten','aus einem Quadrat und einem Rechteck'], correct:0,
+  hint:()=>'Zähle die farbigen Teile A, B, C und D.',
+  good:()=>'Genau. Diese Teile schauen wir uns jetzt einzeln an.',
+  note:()=>'Plan: Gesamtfläche in Teile zerlegen und die Teile addieren.'},
+ {kind:'drag', text:()=>`Zieh die vier Teile <b>A, B, C und D</b> auseinander, sodass keines mehr an seinem alten Platz liegt.`,
+  wait:'Verschiebe alle vier Teile.',
+  check:st=>st.pieces.every(p=>Math.abs(p.x-p.ox)>=1||Math.abs(p.y-p.oy)>=1),
+  hint:()=>'Lege die Teile in den freien Bereich rechts.',
+  good:()=>'Gut. Jetzt siehst du die vier Teile einzeln.'},
+ {kind:'match', text:()=>`Welchen Flächeninhalt hat jedes Teil? Schau auf die Seitenlängen.`,
+  rows:st=>[['A','x²'],['B',st.b+'x'],['C',st.b+'x'],['D',st.b+'²']],
+  options:st=>['x²',st.b+'x',st.b+'²','x + '+st.b,'2x'],
+  hint:st=>`Flächeninhalt = Länge mal Breite. B ist x lang und ${st.b} breit.`,
+  good:st=>`Richtig: A = x², B = ${st.b}x, C = ${st.b}x, D = ${st.b}².`,
+  note:st=>`Teile: A = x², B = ${st.b}x, C = ${st.b}x, D = ${st.b}²`},
+ {kind:'drag', text:()=>`Leg <b>B genau auf C</b>. Tippe dazu B an und drück „Teil drehen“, dann schieb es auf C.`,
+  wait:'B muss genau auf C liegen.',
+  check:()=>{const B=P('B'),C=P('C');return B.x===C.x&&B.y===C.y&&B.w===C.w&&B.h===C.h;},
+  hint:()=>'B steht hochkant, C liegt quer. Erst drehen, dann verschieben.',
+  good:st=>`B und C sind deckungsgleich. Das Rechteck mit ${st.b}x kommt also zweimal vor: 2 · ${st.b}x.`,
+  note:st=>`B und C sind gleich groß: zusammen 2 · ${st.b}x.`},
+ {kind:'choice', text:st=>`Jetzt addieren wir alle Teile zum Gesamtflächeninhalt. Zwei Teile kennen wir schon: das große Quadrat A mit <b>x²</b> und das kleine Quadrat D mit <b>${st.b}²</b>. Dazu kommen noch die beiden gleich großen Rechtecke B und C. Ergänze:<br><br>(x + ${st.b})² = x² + … + ${st.b}²`,
+  options:st=>[st.b+'x','2 · '+st.b+'x',String(2*st.b),'2 · '+st.b+'²'], correct:1,
+  hint:st=>`Die Lücke steht für B und C zusammen. Jedes der beiden Rechtecke hat ${st.b}x.`,
+  good:st=>`Genau: (x + ${st.b})² = x² + ${st.b}x + ${st.b}x + ${st.b}² = x² + 2 · ${st.b}x + ${st.b}².`,
+  note:st=>`(x + ${st.b})² = x² + ${st.b}x + ${st.b}x + ${st.b}² = x² + 2 · ${st.b}x + ${st.b}²`},
+ {kind:'number', text:st=>`Kästchenprobe mit x = ${st.x}: Das große Quadrat hat ${sq(st.x+st.b)} Kästchen. Addiere die Teile: ${sq(st.x)} + ${st.x*st.b} + ${st.x*st.b} + ${sq(st.b)} = ?`,
+  answer:st=>sq(st.x+st.b), hint:()=>'Zähle die vier Teile zusammen.',
+  good:st=>`${sq(st.x+st.b)} – genau der Gesamtflächeninhalt.`,
+  note:st=>`Probe: ${sq(st.x)} + ${st.x*st.b} + ${st.x*st.b} + ${sq(st.b)} = ${sq(st.x+st.b)}`},
+ {kind:'choice', text:st=>`Im Rechenweg steht (x + ${st.b}) · (x + ${st.b}) = x² + x · ${st.b} + ${st.b} · x + ${st.b}². Wo stecken die Teile B und C?`,
+  options:st=>['bei x · '+st.b+' und '+st.b+' · x','bei x²','bei '+st.b+'²','gar nicht'], correct:0,
+  hint:()=>'B und C sind die beiden Rechtecke.',
+  good:()=>'Richtig. Jeder Summand im Rechenweg ist ein Flächenstück.',
+  note:st=>`x · ${st.b} und ${st.b} · x sind die Rechtecke B und C.`},
+ {kind:'action', text:()=>`Funktioniert das nur mit x und 4? Wir ersetzen x durch eine <b>beliebige Länge a</b> und 4 durch eine <b>beliebige Länge b</b>. Das große Quadrat hat dann die Seitenlänge a + b, sein Gesamtflächeninhalt ist (a + b)². Die Aufteilung in vier Teile bleibt genau gleich.`,
+  label:'Allgemein darstellen', run:st=>goGeneral(st),
+  good:()=>'Die Kästchen sind weg, weil a und b beliebig lang sein können. Schau dir die neue Beschriftung an.',
+  note:()=>'Allgemein: Quadrat mit Seitenlänge a + b, Gesamtfläche (a + b)².'},
+ {kind:'match', text:()=>`Wie vorhin: Welchen Flächeninhalt hat jedes Teil jetzt? Die Seiten heißen a und b.`,
+  rows:()=>[['A','a²'],['B','ab'],['C','ab'],['D','b²']],
+  options:()=>['a²','ab','b²','a + b','2a'],
+  hint:()=>'Wieder Länge mal Breite – nur mit a und b. B ist a lang und b breit.',
+  good:()=>'Richtig: A = a², B = ab, C = ab, D = b².',
+  note:()=>'Teile: A = a², B = ab, C = ab, D = b²'},
+ {kind:'choice', text:()=>`Addiere wieder alle Teile zum Gesamtflächeninhalt: a² + ab + ab + b². Welche Formel ergibt sich?`,
+  options:()=>['(a + b)² = a² + b²','(a + b)² = a² + 2ab + b²','(a + b)² = a² + ab + b²','(a + b)² = 2a + 2b'], correct:1,
+  hint:()=>'ab + ab kann man zusammenfassen.',
+  good:()=>'Das ist die erste binomische Formel: Quadrat + doppeltes Produkt + Quadrat.',
+  note:()=>'Erste binomische Formel: (a + b)² = a² + 2ab + b²'}
+],
+third:[
+ {kind:'choice', text:st=>`Wir wollen <b>(x + ${st.b}) · (x − ${st.b})</b> ohne Klammer schreiben. Welche Fläche hat diesen Flächeninhalt?`,
+  options:st=>[`ein Rechteck mit den Seiten x + ${st.b} und x − ${st.b}`,'ein Quadrat mit Seitenlänge x',`ein Quadrat mit Seitenlänge x + ${st.b}`,`ein Quadrat mit Seitenlänge x − ${st.b}`], correct:0,
+  hint:()=>'Länge mal Breite – die beiden Klammern sind die Seiten.',
+  good:()=>'Genau. So ein Rechteck liegt noch nicht auf der Arbeitsfläche – wir bauen es aus dem Quadrat.',
+  note:st=>`Gesucht: (x + ${st.b}) · (x − ${st.b}), ein Rechteck mit Seiten x + ${st.b} und x − ${st.b}.`},
+ {kind:'choice', text:()=>`Wir starten mit dem Quadrat mit der Seitenlänge x. Welchen Flächeninhalt hat es?`,
+  options:st=>['x²',`(x − ${st.b})²`,`${st.b}x`,`x + ${st.b}`], correct:0,
+  hint:()=>'Seite mal Seite.',
+  good:st=>`Richtig: x² (im Raster ${st.x} · ${st.x} = ${st.x*st.x} Kästchen).`,
+  note:()=>'Start: Quadrat x²'},
+ {kind:'drag', text:()=>`Nimm das kleine Quadrat <b>K</b> rechts unten heraus und leg es außerhalb des Quadrats ab.`,
+  wait:'K muss ganz außerhalb des Quadrats liegen.',
+  check:st=>kOut(st),
+  hint:()=>'Zieh K nach unten aus dem Quadrat heraus.',
+  good:()=>'Gut. Jetzt fehlt dem Quadrat eine Ecke.'},
+ {kind:'choice', text:()=>`Welcher Flächeninhalt ist vom Quadrat noch übrig?`,
+  options:st=>[`x² − ${st.b}²`,`x² − ${st.b}`,`(x − ${st.b})²`,`x² − 2 · ${st.b}`], correct:0,
+  hint:st=>`K ist ein Quadrat mit Seitenlänge ${st.b}.`,
+  good:st=>`Richtig: x² − ${st.b}² (im Raster ${st.x*st.x} − ${st.b*st.b} = ${st.x*st.x-st.b*st.b} Kästchen).`,
+  note:st=>`Nach dem Herausnehmen von K: x² − ${st.b}²`},
+ {kind:'drag', text:()=>`Jetzt bauen wir aus dem Rest ein Rechteck: Tippe den Streifen <b>U</b> an, drück „Teil drehen“ und leg ihn rechts neben das obere Rechteck <b>T</b>.`,
+  wait:'U muss gedreht rechts oben an T liegen.',
+  check:st=>uMoved(st),
+  hint:()=>'Nach dem Drehen steht U hochkant. Seine obere Kante liegt auf einer Höhe mit T.',
+  good:()=>'Fertig: T und U bilden zusammen ein Rechteck. Durch das Umlegen ist keine Fläche dazugekommen oder weggefallen.'},
+ {kind:'choice', text:()=>`Wie lang sind die Seiten des neuen Rechtecks? Schau auf die Beschriftung von T und U.`,
+  options:st=>[`x + ${st.b} und x − ${st.b}`,`x und x − ${st.b}`,`x + ${st.b} und x`,`x und ${st.b}`], correct:0,
+  hint:st=>`Die Breite ist x von T plus ${st.b} von U. Die Höhe ist die Höhe von T.`,
+  good:st=>`Richtig. Das ist genau das gesuchte Rechteck mit dem Flächeninhalt (x + ${st.b}) · (x − ${st.b}).`,
+  note:st=>`Neues Rechteck: Seiten x + ${st.b} und x − ${st.b}, also (x + ${st.b}) · (x − ${st.b}).`},
+ {kind:'choice', text:st=>`Das Rechteck besteht aus genau den Teilen, die nach dem Herausnehmen von K übrig waren – also x² − ${st.b}². Ergänze:<br><br>(x + ${st.b}) · (x − ${st.b}) = …`,
+  options:st=>[`x² − ${st.b}²`,`x² + ${st.b}²`,`x² − 2 · ${st.b}x + ${st.b}²`,`(x − ${st.b})²`], correct:0,
+  hint:()=>'Beim Umlegen ändert sich der Flächeninhalt nicht.',
+  good:st=>`Genau: (x + ${st.b}) · (x − ${st.b}) = x² − ${st.b}².`,
+  note:st=>`(x + ${st.b}) · (x − ${st.b}) = x² − ${st.b}²`},
+ {kind:'number', text:st=>`Kästchenprobe mit x = ${st.x}: Das Rechteck ist ${st.x+st.b} breit und ${st.x-st.b} hoch. (${st.x} + ${st.b}) · (${st.x} − ${st.b}) = ?`,
+  answer:st=>(st.x+st.b)*(st.x-st.b), hint:st=>`${st.x+st.b} · ${st.x-st.b}`,
+  good:st=>`${(st.x+st.b)*(st.x-st.b)} – und ${st.x*st.x} − ${st.b*st.b} = ${st.x*st.x-st.b*st.b}. Passt!`,
+  note:st=>`Probe: ${st.x+st.b} · ${st.x-st.b} = ${(st.x+st.b)*(st.x-st.b)} = ${st.x*st.x} − ${st.b*st.b}`},
+ {kind:'choice', text:st=>`Im Rechenweg steht (x + ${st.b}) · (x − ${st.b}) = x² − ${st.b}x + ${st.b}x − ${st.b}². Was passiert mit − ${st.b}x und + ${st.b}x?`,
+  options:st=>['Sie heben sich auf (zusammen 0).',`Zusammen ergeben sie 2 · ${st.b}x.`,`Zusammen ergeben sie − 2 · ${st.b}x.`,`Zusammen ergeben sie ${st.b}².`], correct:0,
+  hint:()=>'Etwas abziehen und dasselbe wieder dazutun …',
+  good:()=>'Richtig. Darum gibt es bei der 3. binomischen Formel kein doppeltes Produkt. Im Bild: Der Streifen U wird nicht weggenommen, sondern nur umgelegt.',
+  note:st=>`− ${st.b}x + ${st.b}x = 0: der Streifen wird nur umgelegt.`},
+ {kind:'action', text:()=>`Funktioniert das nur mit x und 4? Wir ersetzen x durch eine <b>beliebige Länge a</b> und 4 durch eine <b>beliebige Länge b</b>. Wir starten wieder mit dem Quadrat a².`,
+  label:'Allgemein darstellen', run:st=>goGeneral(st),
+  good:()=>'Die Kästchen sind weg, weil a und b beliebig lang sein können.',
+  note:()=>'Allgemein: Quadrat a², gesucht (a + b) · (a − b).'},
+ {kind:'drag', text:()=>`Mach dasselbe noch einmal: <b>K</b> herausnehmen, dann <b>U</b> drehen und rechts an <b>T</b> anlegen.`,
+  wait:'K muss außerhalb liegen und U gedreht rechts an T.',
+  check:st=>kOut(st)&&uMoved(st),
+  hint:()=>'Wie vorhin – nur ohne Kästchen.',
+  good:()=>'Gut. Herausgenommen wurde das Quadrat b².',
+  note:()=>'Herausgenommen: b². Übrig: a² − b².'},
+ {kind:'choice', text:()=>`Welche Seiten hat das neue Rechteck jetzt?`,
+  options:()=>['a + b und a − b','a und a − b','a + b und a','a und b'], correct:0,
+  hint:()=>'Breite: a von T plus b von U.',
+  good:()=>'Richtig. Sein Flächeninhalt ist (a + b) · (a − b).',
+  note:()=>'Rechteck: (a + b) · (a − b)'},
+ {kind:'choice', text:()=>`Das Rechteck hat denselben Flächeninhalt wie das Quadrat a² ohne die Ecke b². Welche Formel liest du ab?`,
+  options:()=>['(a + b) · (a − b) = a² − b²','(a + b) · (a − b) = a² + b²','(a + b) · (a − b) = a² − 2ab + b²','(a + b) · (a − b) = (a − b)²'], correct:0,
+  hint:()=>'Quadrat minus Quadrat.',
+  good:()=>'Das ist die dritte binomische Formel: Quadrat minus Quadrat.',
+  note:()=>'Dritte binomische Formel: (a + b) · (a − b) = a² − b²'}
+]
+};
+
+/* ---------- panel ---------- */
+const box=document.getElementById('stepbox');
+function renderProgress(){
+  const demo=S.mode==='minus';
+  const n=demo?SCENES.length:STEPS[S.mode].length, pr=document.getElementById('progress');
+  pr.innerHTML='';
+  for(let i=0;i<n;i++){const s=document.createElement('span');
+    const done=demo?(i<S.step||(i===S.step&&S.revealed)):S.solved[i];
+    if(done) s.className='done'; else if(i===S.step) s.className='now'; pr.appendChild(s);}
+}
+function renderNotes(){
+  const n=document.getElementById('notes');
+  if(!S.notes.length){n.innerHTML='<p class="empty">Hier sammelt sich, was du herausfindest. Schreib es am Ende in dein Heft.</p>';return;}
+  n.innerHTML='<ol>'+S.notes.map(t=>`<li>${t}</li>`).join('')+'</ol>';
+}
+function shuffleArray(arr){
+  const a=[...arr];
+
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+
+  return a;
+}
+function renderStep(){
+  if(S.mode==='minus') return renderDemo();
+  renderProgress(); renderNotes();
+  const list=STEPS[S.mode];
+  if(S.step>=list.length){
+    box.innerHTML=`<div class="done-card"><p class="task"><b>Geschafft!</b></p><p>Übertrage die Notizen unten in dein Heft und zeichne das Bild dazu.</p></div>
+    <div class="nav"><button class="btn" type="button" id="restart">Nochmal von vorn</button></div>`;
+    document.getElementById('restart').onclick=()=>{states[S.mode]=freshState(S.mode);S=states[S.mode];layout(S);buildBoard();updateTools();renderStep();};
+    const o=document.getElementById('toOther'); if(o) o.onclick=()=>switchMode('minus');
+    return;
+  }
+  const s=list[S.step], st=S, solved=!!S.solved[S.step];
+  const goal=S.mode==='third'?(S.general?'Ziel: (a + b) · (a − b) allgemein ohne Klammer schreiben':`Ziel: (x + ${st.b}) · (x − ${st.b}) ohne Klammer schreiben`):S.mode==='minus'?(S.general?'Ziel: (a − b)² allgemein bestimmen':`Ziel: den Flächeninhalt von (x − ${st.b})² bestimmen`):(S.general?'Ziel: (a + b)² allgemein ohne Klammer schreiben':`Ziel: den Gesamtflächeninhalt (x + ${st.b})² ohne Klammer schreiben`);
+  let html=`<p class="goal">${goal}</p><p class="stepno">Schritt ${S.step+1} von ${list.length}</p><p class="task">${s.text(st)}</p>`;
+  if(s.kind==='number'){
+    html+=`<div class="answer"><input type="number" inputmode="numeric" id="num" aria-label="Deine Antwort" ${solved?'disabled':''}><button class="btn primary" type="button" id="checkNum" ${solved?'disabled':''}>Prüfen</button></div>`;
+  }else if(s.kind==='choice'){
+    const choices=s.options(st).map((text,index)=>({
+      text,
+      correct:index===s.correct
+    }));
+
+    const shuffled=shuffleArray(choices);
+
+    html+='<div class="choices">'+
+      shuffled.map((choice,i)=>
+        `<button class="btn${solved&&choice.correct?' right':''}"
+          type="button"
+          data-correct="${choice.correct}"
+          ${solved?'disabled':''}>
+          ${choice.text}
+        </button>`
+      ).join('')+
+      '</div>';
+  }else if(s.kind==='match'){
+    const opts=s.options(st);
+    html+='<div class="match">'+s.rows(st).map(([id])=>`<label for="m-${id}">Teil ${id}</label><select id="m-${id}" ${solved?'disabled':''}><option value="">wählen …</option>${opts.map(o=>`<option>${o}</option>`).join('')}</select>`).join('')+`</div><div class="answer"><button class="btn primary" type="button" id="checkMatch" ${solved?'disabled':''}>Prüfen</button></div>`;
+  }else if(s.kind==='drag'){
+    html+=`<p class="wait">${solved?'Erledigt.':s.wait}</p>`;
+  }else if(s.kind==='action'){
+    html+=`<div class="answer"><button class="btn primary" type="button" id="act" ${solved?'disabled':''}>${s.label}</button></div>`;
+  }else if(s.kind==='slider'){
+    html+=`<div class="sliders">
+      <label>x = <input type="range" id="sx" min="5" max="14" step="1" value="${st.x}"><output id="ox">${st.x}</output></label>
+      <label>b = <input type="range" id="sb" min="1" max="5" step="1" value="${st.b}"><output id="ob">${st.b}</output></label>
+    </div><div class="calc" id="calc"></div>`;
+  }
+  html+=`<p class="hint" id="hint">Tipp: ${s.hint?s.hint(st):''}</p><div class="feedback ${solved?'good':''}" id="fb">${solved?s.good(st):''}</div>
+  <div class="nav">${s.hint?'<button class="btn" type="button" id="hintBtn">Tipp</button>':''}<span class="spacer"></span><button class="btn primary" type="button" id="next" ${solved?'':'disabled'}>Weiter</button></div>`;
+  box.innerHTML=html;
+
+  const fb=document.getElementById('fb');
+  const hb=document.getElementById('hintBtn'); if(hb) hb.onclick=()=>document.getElementById('hint').classList.toggle('show');
+  document.getElementById('next').onclick=next;
+  if(s.kind==='number'&&!solved){
+    const inp=document.getElementById('num');
+    const go=()=>{
+      const v=Number(inp.value.replace(',','.'));
+      if(inp.value.trim()===''){fb.className='feedback bad';fb.textContent='Gib zuerst eine Zahl ein.';return;}
+      if(v===s.answer(st)) succeed(); else {fb.className='feedback bad';fb.textContent='Noch nicht. Rechne oder zähle noch einmal – oder nutze den Tipp.';}
+    };
+    document.getElementById('checkNum').onclick=go;
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  }
+  if(s.kind==='choice'&&!solved){
+    box.querySelectorAll('.choices button').forEach(bt=>bt.onclick=()=>{
+      const isCorrect=bt.dataset.correct==='true';
+
+      if(isCorrect){
+        bt.classList.add('right');
+        succeed();
+      }else{
+        bt.classList.add('wrong');
+        fb.className='feedback bad';
+        fb.textContent='Das passt nicht. Schau dir die Teile auf der Arbeitsfläche an.';
+      }
+    });
+  } 
+  if(s.kind==='match'&&!solved){
+    document.getElementById('checkMatch').onclick=()=>{
+      const rows=s.rows(st); let ok=true;
+      rows.forEach(([id,ans])=>{const sel=document.getElementById('m-'+id); const r=sel.value===ans; sel.style.borderColor=r?css('--good'):css('--bad'); if(!r) ok=false;});
+      if(ok) succeed(); else {fb.className='feedback bad';fb.textContent='Rot umrandete Teile stimmen noch nicht.';}
+    };
+  }
+  if(s.kind==='action'&&!solved){
+    document.getElementById('act').onclick=()=>{s.run(st);succeed();};
+  }
+  if(s.kind==='slider'){
+    const sx=document.getElementById('sx'), sb=document.getElementById('sb');
+    const upd=()=>{
+      let x=Number(sx.value), b=Number(sb.value);
+      if(st.mode==='minus'&&b>=x){b=x-1;sb.value=b;}
+      st.x=x; st.b=b;
+      document.getElementById('ox').textContent=x; document.getElementById('ob').textContent=b;
+      layout(st); buildBoard(); updateTools();
+      const c=document.getElementById('calc');
+      if(st.mode==='plus'){
+        c.innerHTML=`(x + b)² = (${x} + ${b})² = <b>${sq(x+b)}</b><br>x² + 2 · b · x + b² = ${sq(x)} + ${2*b*x} + ${sq(b)} = <b>${sq(x)+2*b*x+sq(b)}</b> ✓`;
+      }else{
+        c.innerHTML=`frei: (x − b)² = (${x} − ${b})² = <b>${sq(x-b)}</b><br>x² − 2 · b · x + b² = ${sq(x)} − ${2*b*x} + ${sq(b)} = <b>${sq(x)-2*b*x+sq(b)}</b> ✓`;
+      }
+      if(!S.solved[S.step]&&st.sliderTouched) succeed();
+      st.sliderTouched=true;
+    };
+    sx.oninput=upd; sb.oninput=upd;
+    st.sliderTouched=false; upd();
+  }
+  if(s.kind==='drag'&&!solved) onBoardChange();
+}
+function succeed(){
+  const s=STEPS[S.mode][S.step];
+  if(S.solved[S.step]) return;
+  S.solved[S.step]=true;
+  if(s.note) S.notes.push(s.note(S));
+  const fb=document.getElementById('fb');
+  fb.className='feedback good'; fb.innerHTML=s.good(S);
+  document.getElementById('next').disabled=false;
+  box.querySelectorAll('input[type=number],#checkNum,.choices button,select,#checkMatch,#act').forEach(e=>e.disabled=true);
+  const w=box.querySelector('.wait'); if(w) w.textContent='Erledigt.';
+  renderProgress(); renderNotes(); drawUnder(); S.pieces.forEach(drawPiece); drawOver();
+}
+function next(){
+  S.step++;
+  const s=STEPS[S.mode][S.step];
+  drawOver();
+  renderStep();
+  document.querySelector('.panel').scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function onBoardChange(){
+  if(S.mode==='minus') return;
+  const s=STEPS[S.mode][S.step];
+  if(s&&s.kind==='drag'&&!S.solved[S.step]&&s.check(S)) succeed();
+}
+
+
+/* ---------- teacher demo (2nd formula) ---------- */
+function demoBase(st,general){
+  st.general=!!general; st.x=10; st.b=general?3:4; st.cut=false; st.f={}; st.selected=null;
+}
+function setPlaced(st,F,G){
+  layout(st);
+  if(F){const p=P('F'); p.x=1+st.x-st.b; p.y=1;}
+  if(G){const p=P('G'); p.x=1; p.y=1+st.x-st.b;}
+}
+function animateTo(moves,after){
+  buildBoard();
+  for(const id in moves){const p=P(id); if(p&&p.node) p.node.classList.add('anim');}
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    for(const id in moves){const p=P(id); if(!p) continue; p.x=moves[id][0]; p.y=moves[id][1]; p.node.setAttribute('transform',`translate(${p.x} ${p.y})`);}
+    setTimeout(()=>{drawOver(); if(after) after();},480);
+  }));
+}
+const SCENES=[
+ {title:'Was suchen wir?',
+  q:'Wir wollen (x − 4)² berechnen. Welches Quadrat auf der Tafel hat diesen Flächeninhalt?',
+  a:'Das Quadrat oben links mit der Seitenlänge x − 4. Seinen Flächeninhalt kennen wir aber noch nicht.',
+  tafel:'Gesucht: (x − 4)², das Quadrat mit Seitenlänge x − 4',
+  setup:st=>{demoBase(st); st.pieces=[];},
+  reveal:st=>{st.f.target=true; drawOver();}},
+ {title:'Womit starten wir?',
+  q:'Welche Fläche kennen wir schon – und was müssen wir davon wegnehmen, damit nur (x − 4)² übrig bleibt?',
+  a:'Das ganze Quadrat hat x². Wir ziehen einen Streifen rechts und einen Streifen unten ab. Jeder Streifen ist x lang und 4 breit, also 4x.',
+  tafel:'Start: ganzes Quadrat x². Abziehen: zwei Streifen mit je 4x.',
+  setup:st=>{demoBase(st); st.pieces=[]; st.f.target=true;},
+  reveal:(st,anim)=>{st.f.whole=true; layout(st); buildBoard();}},
+ {title:'Ersten Streifen abziehen',
+  q:'Wir ziehen den Streifen F ab. Was bleibt vom Quadrat übrig?',
+  a:'x² − 4x',
+  tafel:'x² − 4x',
+  setup:st=>{demoBase(st); layout(st); st.f.target=true; st.f.whole=true;},
+  reveal:(st,anim)=>{if(anim) animateTo({F:[1+st.x-st.b,1]}); else setPlaced(st,true,false);}},
+ {title:'Zweiten Streifen abziehen',
+  q:'Jetzt ziehen wir auch G ab. Dann müsste x² − 4x − 4x übrig bleiben, mit x = 10 also 100 − 40 − 40 = 20 Kästchen. Stimmt das?',
+  a:'Nein! Gezählt sind es 36 Kästchen, nicht 20. Wir haben 16 Kästchen zu viel abgezogen.',
+  tafel:'x² − 4x − 4x? Gerechnet 20 Kästchen, gezählt 36!',
+  setup:st=>{demoBase(st); setPlaced(st,true,false); st.f.target=true;},
+  reveal:(st,anim)=>{st.f.count=true; if(anim) animateTo({G:[1,1+st.x-st.b]}); else setPlaced(st,true,true);}},
+ {title:'Das Problem',
+  q:'Wo haben wir zu viel abgezogen?',
+  a:'Die Ecke rechts unten liegt in beiden Streifen. Sie hat 4² = 16 Kästchen und wurde doppelt abgezogen. Also müssen wir sie einmal wieder hinzufügen.',
+  tafel:'Problem: Die Ecke 4² wurde doppelt abgezogen. Lösung: einmal + 4².',
+  setup:st=>{demoBase(st); setPlaced(st,true,true); st.f.target=true; st.f.count=true;},
+  reveal:st=>{st.f.overlap=true; drawOver();}},
+ {title:'Die Formel',
+  q:'Wie lautet also (x − 4)² ohne Klammer? Und wo steckt die zurückgegebene Ecke im Rechenweg?',
+  a:'(x − 4)² = x² − 4x − 4x + 4² = x² − 2 · 4x + 4². Im Rechenweg ist es (−4) · (−4) = + 16.',
+  tafel:'(x − 4)² = x² − 4x − 4x + 4² = x² − 2 · 4x + 4²',
+  setup:st=>{demoBase(st); setPlaced(st,true,true); st.f.target=true; st.f.count=true; st.f.overlap=true;},
+  reveal:(st,anim)=>{st.f.plus=true; cutLayout(st); const {x,b}=st;
+    if(anim){const H=P('H'); H.x=1+x-b; H.y=1+x-b; animateTo({H:[x+3,x+3]});} else buildBoard();}},
+ {title:'Allgemein',
+  q:'Gilt das für beliebige Längen? Das Quadrat hat jetzt die Seitenlänge a, die Streifen sind b breit.',
+  a:'Ganzes Quadrat a², zwei Streifen mit je ab abziehen, die Ecke b² einmal zurückgeben: (a − b)² = a² − 2ab + b²',
+  tafel:'Zweite binomische Formel: (a − b)² = a² − 2ab + b²',
+  setup:st=>{demoBase(st,true); setPlaced(st,true,true); st.f.target=true;},
+  reveal:st=>{st.f.overlap=true; drawOver();}}
+];
+function applyScene(i,revealed){
+  const k=Math.min(i,SCENES.length-1);
+  S.step=i; S.revealed=revealed;
+  SCENES[k].setup(S);
+  if(revealed||i>k) SCENES[k].reveal(S,false);
+  buildBoard(); updateTools();
+}
+function renderDemo(){
+  renderProgress();
+  const n=document.getElementById('notes');
+  const lines=SCENES.filter((sc,k)=>k<S.step||(k===S.step&&S.revealed)).map(sc=>sc.tafel);
+  n.innerHTML=lines.length?'<ol>'+lines.map(t=>`<li>${t}</li>`).join('')+'</ol>':'<p class="empty">Hier entsteht Schritt für Schritt das Tafelbild.</p>';
+  if(S.step>=SCENES.length){
+    box.innerHTML=`<div class="done-card"><p class="task"><b>Fertig.</b></p><p>Das Tafelbild unten ist vollständig.</p></div><div class="nav"><button class="btn" type="button" id="restart">Von vorn</button></div>`;
+    document.getElementById('restart').onclick=()=>{applyScene(0,false);renderDemo();};
+    return;
+  }
+  const sc=SCENES[S.step];
+  box.innerHTML=`<div class="demo"><p class="goal">${S.general?'Ziel: (a − b)² allgemein':'Ziel: den Flächeninhalt von (x − 4)² bestimmen'}</p>
+  <p class="stepno">Schritt ${S.step+1} von ${SCENES.length}: ${sc.title}</p>
+  <p class="task"><b>Frage an die Klasse:</b> ${sc.q}</p>
+  <div class="feedback ${S.revealed?'good':''}" id="fb">${S.revealed?sc.a:''}</div>
+  <div class="nav"><button class="btn" type="button" id="back" ${S.step===0?'disabled':''}>Zurück</button><span class="spacer"></span>
+  <button class="btn" type="button" id="reveal" ${S.revealed?'disabled':''}>Auflösen</button>
+  <button class="btn primary" type="button" id="next" ${S.revealed?'':'disabled'}>Weiter</button></div></div>`;
+  document.getElementById('back').onclick=()=>{applyScene(S.step-1,true);renderDemo();};
+  document.getElementById('reveal').onclick=()=>{S.revealed=true; sc.reveal(S,true); renderDemo();};
+  document.getElementById('next').onclick=()=>{if(S.step+1>=SCENES.length){S.step++;renderDemo();return;} applyScene(S.step+1,false);renderDemo();};
+}
+
+/* ---------- tabs ---------- */
+function switchMode(m){
+  S=states[m];
+  document.getElementById('tab-plus').setAttribute('aria-selected',m==='plus');
+  document.getElementById('tab-minus').setAttribute('aria-selected',m==='minus');
+  document.getElementById('tab-third').setAttribute('aria-selected',m==='third');
+  document.querySelector('.notes h2').textContent=m==='minus'?'Tafelbild':'Für dein Heft';
+  if(m==='minus'){applyScene(S.step,!!S.revealed);updateTools();renderStep();return;}
+  if(!S.pieces.length) layout(S);
+  buildBoard(); updateTools(); renderStep();
+}
+document.getElementById('tab-plus').onclick=()=>switchMode('plus');
+document.getElementById('tab-minus').onclick=()=>switchMode('minus');
+document.getElementById('tab-third').onclick=()=>switchMode('third');
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{buildBoard();});
+
+layout(states.plus); states.minus.revealed=false;
+switchMode('plus');
+})();
+</script>
+</body>
+</html>
